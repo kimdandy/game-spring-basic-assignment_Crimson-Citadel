@@ -25,7 +25,9 @@ public class GameService {
     private final GameRepository gameRepository;
     private final RunCardRepository runCardRepository;
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = false)
+    // 기존에는 읽기만(readOnly = true) 가능하여 저장자체가 안되는 상황이었음
+    // 접근 및 수정을 위하여 읽기 모드를 false로 변경
     public GameDetailResponse createGame(CreateRequest request) {
         Game game = gameRepository.save(new Game(request.getPlayerName()));
         saveDeck(game, request.getDeck());
