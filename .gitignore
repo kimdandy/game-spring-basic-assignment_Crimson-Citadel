@@ -3,7 +3,4 @@
 build/
 data/
 *.iml
-docker-compose.yml
-application.yml
-application.properties
 gradle.properties
