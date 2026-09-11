@@ -1,9 +1,6 @@
 package com.gamebasic.game.controller;
 
-import com.gamebasic.game.dto.CreateRequest;
-import com.gamebasic.game.dto.GameDetailResponse;
-import com.gamebasic.game.dto.GameSummaryResponse;
-import com.gamebasic.game.dto.ProgressRequest;
+import com.gamebasic.game.dto.*;
 import com.gamebasic.game.service.GameService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +38,26 @@ public class GameController {
         return ResponseEntity.ok(gameService.updateProgress(gameId, request));
     }
 
-    // lv7
+    // lv7 :
     @GetMapping("/games/{gameId}")
     public ResponseEntity<GameDetailResponse> getGame(@PathVariable Long gameId) {
         return ResponseEntity.ok(gameService.getGame(gameId));
+    }
+
+    // lv8 : 이름 변경 api
+    @PatchMapping("/games/{gameId}")
+    public ResponseEntity<GameDetailResponse> renameGame(
+            @PathVariable Long gameId,
+            @Valid @RequestBody RenameRequest request
+    ) {
+        gameService.renameGame(gameId, request); // @Valid RenameRequest
+        return ResponseEntity.noContent().build();
+    }
+
+    // lv8 : 삭제
+    @DeleteMapping("/games/{gameId}")
+    public ResponseEntity<Void> deleteGame(@PathVariable Long gameId) {
+        gameService.deleteGame(gameId);
+        return ResponseEntity.noContent().build();
     }
 }

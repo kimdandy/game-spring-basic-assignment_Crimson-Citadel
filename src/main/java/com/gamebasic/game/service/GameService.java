@@ -1,15 +1,13 @@
 package com.gamebasic.game.service;
 
-import com.gamebasic.game.dto.CreateRequest;
-import com.gamebasic.game.dto.GameDetailResponse;
-import com.gamebasic.game.dto.GameSummaryResponse;
-import com.gamebasic.game.dto.ProgressRequest;
+import com.gamebasic.game.dto.*;
 import com.gamebasic.game.entity.Game;
 import com.gamebasic.game.repository.GameRepository;
 import com.gamebasic.runcard.dto.CardResponse;
 import com.gamebasic.runcard.dto.RunCardRequest;
 import com.gamebasic.runcard.entity.RunCard;
 import com.gamebasic.runcard.repository.RunCardRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -18,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 @Component //Bean 자동 등록
@@ -120,5 +119,21 @@ public class GameService {
     }
 
     // TODO (Lv 8): 플레이어 이름 변경 — 변경 감지로 수정
+    @Transactional //영속성 컨텍스트의 변경감지 적용
+    public void renameGame(Long gameId, @Valid RenameRequest request){ // 특별히 반환할 게 없으니 void로 처리
+        Game game = findGame(gameId);
+
+        if(!Objects.equals(request.getPlayerName(), game.getPlayerName())){ // 같지않다면 변환 처리
+            game.rename(request.getPlayerName());
+        }
+
+    }
+
     // TODO (Lv 8): 게임 삭제
+    @Transactional
+    public void deleteGame(Long gameId){
+        Game game = findGame(gameId);
+        runCardRepository.deleteAllByGame(game);
+        gameRepository.delete(game); // 내장된 delete 사용
+    }
 }
