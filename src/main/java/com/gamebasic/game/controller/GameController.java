@@ -2,6 +2,7 @@ package com.gamebasic.game.controller;
 
 import com.gamebasic.game.dto.CreateRequest;
 import com.gamebasic.game.dto.GameDetailResponse;
+import com.gamebasic.game.dto.ProgressRequest;
 import com.gamebasic.game.service.GameService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,29 +14,33 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/games") // 상위에서 라우팅을 했기 때문에 하위에서는 생략
+//@RequestMapping("/games") // 상위에서 라우팅을 했기 때문에 하위에서는 생략
 public class GameController {
     private final GameService gameService;
 
-    @GetMapping
+    @GetMapping("/games")
     public ResponseEntity<List<Object>> getGames() {
         // List<Object>는 임시 구현이며, Lv 7에서 제대로 고칩니다.
         // List.of()는 빈 목록을 돌려주는 임시 구현이며, Lv 7에서 제대로 고칩니다.
         return ResponseEntity.ok(List.of());
     }
 
-    @PostMapping
+    @PostMapping("/games")
     public ResponseEntity<GameDetailResponse> createGame(@Valid @RequestBody CreateRequest request) {
         GameDetailResponse created = gameService.createGame(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     // TODO (Lv 6): 진행과 전체 덱 저장. 주석을 풀고 구현하세요.
-    // @PutMapping("/games/{gameId}/progress")
-    // public ResponseEntity<?> updateProgress(
-    //     @PathVariable Long gameId,
-    //     @Valid @RequestBody ProgressRequest request
-    // ) {
-    //     return ResponseEntity.ok(gameService.updateProgress(gameId, request));
-    // }
+    @PutMapping("/games/{gameId}/progress")
+    public ResponseEntity<GameDetailResponse> updateProgress(
+            @PathVariable
+            Long gameId,
+            @Valid
+            @RequestBody
+            ProgressRequest request
+    ) {
+        GameDetailResponse saved = gameService.updateProgress(gameId, request);
+        return ResponseEntity.ok(gameService.updateProgress(gameId, request));
+    }
 }
