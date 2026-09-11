@@ -2,6 +2,7 @@ package com.gamebasic.game.service;
 
 import com.gamebasic.game.dto.CreateRequest;
 import com.gamebasic.game.dto.GameDetailResponse;
+import com.gamebasic.game.dto.GameSummaryResponse;
 import com.gamebasic.game.dto.ProgressRequest;
 import com.gamebasic.game.entity.Game;
 import com.gamebasic.game.repository.GameRepository;
@@ -25,9 +26,10 @@ public class GameService {
     private final GameRepository gameRepository;
     private final RunCardRepository runCardRepository;
 
-    @Transactional(readOnly = false)
+    @Transactional
     // 기존에는 읽기만(readOnly = true) 가능하여 저장자체가 안되는 상황이었음
     // 접근 및 수정을 위하여 읽기 모드를 false로 변경
+    // default가 false 이므로 삭제
     public GameDetailResponse createGame(CreateRequest request) {
         Game game = gameRepository.save(new Game(request.getPlayerName()));
         saveDeck(game, request.getDeck());
@@ -37,13 +39,13 @@ public class GameService {
             deck.add(new CardResponse(card.getId(), card.getCardType(), card.getAcquiredFloor()));
         }
         return new GameDetailResponse(
-            game.getId(),
-            game.getPlayerName(),
-            game.getCurrentHp(),
-            game.getCurrentFloor(),
-            game.getPhase(),
-            game.getStatus(),
-            deck
+                game.getId(),
+                game.getPlayerName(),
+                game.getCurrentHp(),
+                game.getCurrentFloor(),
+                game.getPhase(),
+                game.getStatus(),
+                deck
         );
     }
 
@@ -57,17 +59,17 @@ public class GameService {
 
     private Game findGame(Long gameId) {
         return gameRepository.findById(gameId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     @Transactional
     public GameDetailResponse updateProgress(Long gameId, ProgressRequest request) {
         Game game = findGame(gameId);
         game.updateProgress(
-            request.getCurrentHp(),
-            request.getCurrentFloor(),
-            request.getPhase(),
-            request.getStatus()
+                request.getCurrentHp(),
+                request.getCurrentFloor(),
+                request.getPhase(),
+                request.getStatus()
         );
         // 요청의 deck은 저장할 덱 전체이므로 기존 카드를 모두 지우고 요청 순서대로 다시 저장합니다.
         runCardRepository.deleteAllByGame(game);
@@ -78,25 +80,44 @@ public class GameService {
             deck.add(new CardResponse(card.getId(), card.getCardType(), card.getAcquiredFloor()));
         }
         return new GameDetailResponse(
-            game.getId(),
-            game.getPlayerName(),
-            game.getCurrentHp(),
-            game.getCurrentFloor(),
-            game.getPhase(),
-            game.getStatus(),
-            deck
+                game.getId(),
+                game.getPlayerName(),
+                game.getCurrentHp(),
+                game.getCurrentFloor(),
+                game.getPhase(),
+                game.getStatus(),
+                deck
         );
     }
 
     // TODO (Lv 7): 게임 목록 조회. 주석을 풀고 구현하세요.
-    // @Transactional(readOnly = true)
-    // public List<GameSummaryResponse> getGames() {
-    // }
+    @Transactional(readOnly = true)
+    public List<GameSummaryResponse> getGames() {
+        return gameRepository.findAllByOrderByIdDesc().stream().map(GameSummaryResponse::from).toList(); // 내림차순으로 정렬한 게임 정보 목록
+    }
 
     // TODO (Lv 7): 게임 상세 조회. 주석을 풀고 구현하세요.
-    // @Transactional(readOnly = true)
-    // public GameDetailResponse getGame(Long gameId) {
-    // }
+    @Transactional(readOnly = true)
+    public GameDetailResponse getGame(Long gameId) {
+//        return gameRepository.findById(gameId).orElseThrow(() ->
+//                new IllegalArgumentException("정보 없음")
+//        );
+        Game game = findGame(gameId); // 입력받은 Id를 통해 해당 게임 정보 찾기
+        List<RunCard> cards = runCardRepository.findAllByGameOrderByIdAsc(game); // 오름차순으로 정렬한 카드 목록
+        List<CardResponse> deck = new ArrayList<>();
+        for (RunCard card : cards) {
+            deck.add(new CardResponse(card.getId(), card.getCardType(), card.getAcquiredFloor()));
+        } // 덱에 해당 정보 확보
+        return new GameDetailResponse(
+                game.getId(),
+                game.getPlayerName(),
+                game.getCurrentHp(),
+                game.getCurrentFloor(),
+                game.getPhase(),
+                game.getStatus(),
+                deck
+        );
+    }
 
     // TODO (Lv 8): 플레이어 이름 변경 — 변경 감지로 수정
     // TODO (Lv 8): 게임 삭제
